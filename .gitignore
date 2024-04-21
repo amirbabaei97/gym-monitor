@@ -1,0 +1,11 @@
+#virtual environment
+/gym
+
+#environment variables
+.env
+
+#local files
+checkins.csv
+
+#python cache
+__pycache__/
