@@ -42,3 +42,12 @@ async def get_checkins(start_date: datetime = None, end_date: datetime = None):
                 # If no dates are provided, append all records
                 checkins.append(row)
     return checkins
+
+#get the first entry in the csv of checkins
+@app.get("/last/")
+async def get_first_checkin():
+    last_checkin = []
+    with open('checkins.csv', 'r') as file:
+        reader = csv.DictReader(file)
+        last_checkin.append(next(reader))
+        return last_checkin
