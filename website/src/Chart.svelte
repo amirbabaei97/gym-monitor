@@ -20,8 +20,8 @@
                     datasets: [{
                         label: 'Duration (minutes)',
                         data: data.map(item => parseInt(item.Duration)),
-                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                        borderColor: 'rgba(54, 162, 235, 1)',
+                        backgroundColor: 'rgba(238, 238, 238, 0.6)',
+                        borderColor: 'rgba(189, 195, 199, 1)',
                         borderWidth: 1
                     }]
                 },
