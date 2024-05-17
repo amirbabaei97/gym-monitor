@@ -19,7 +19,7 @@ app.add_middleware(
 )
 
 
-@app.get("/scrape")
+@app.get("/api/scrape")
 async def scrape_endpoint():
     loop = asyncio.get_running_loop()
     # Offload the synchronous scrape function to the executor
@@ -27,7 +27,7 @@ async def scrape_endpoint():
     return {"message": "Scraping process completed."}
 
 
-@app.get("/checkins/")
+@app.get("/api/checkins/")
 async def get_checkins(start_date: datetime = None, end_date: datetime = None):
     checkins = []
     with open('checkins.csv', 'r') as file:

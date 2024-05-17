@@ -30,7 +30,7 @@
         // fetching data for the last two weeks
         try {
             const response = await fetch(
-                `http://localhost:8000/checkins/?start_date=${startDate}T00:00:00&end_date=${endDate}T23:59:59`);
+                `https://gym.amir.rocks/api/checkins/?start_date=${startDate}T00:00:00&end_date=${endDate}T23:59:59`);
             if (!response.ok) throw new Error('Network response was not ok');
             let newData = await response.json();
             if (!Array.isArray(newData)) throw new Error('Data received is not an array');
@@ -43,7 +43,7 @@
         }
         // fetching all-time data
         try {
-            const response = await fetch('http://127.0.0.1:8000/checkins/');
+            const response = await fetch('https://gym.amir.rocks/api/checkins/');
             if (!response.ok) throw new Error('Network response was not ok');
             let newData = await response.json();
             if (!Array.isArray(newData)) throw new Error('Data received is not an array');
@@ -162,15 +162,15 @@
                 <div class="card-content">
                     <div class="date-picker is-flex">
                         <div class="field">
-                            <label class="label">Start Date:</label>
+                            <label class="label" for="start-date">Start Date:</label>
                             <div class="control">
-                                <input class="input" type="date" bind:value={startDate} on:change={fetchData}>
+                                <input id="start-date" class="input" type="date" bind:value={startDate} on:change={fetchData}>
                             </div>
                         </div>
                         <div class="field">
-                            <label class="label">End Date:</label>
+                            <label class="label" for="end-date">End Date:</label>
                             <div class="control">
-                                <input class="input" type="date" bind:value={endDate} on:change={fetchData}>
+                                <input id="end-date" class="input" type="date" bind:value={endDate} on:change={fetchData}>
                             </div>
                         </div>
                     </div>
