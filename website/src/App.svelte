@@ -20,7 +20,6 @@
         const twoWeeksAgo = new Date(today.getTime() - (14 * 24 * 60 * 60 * 1000));
         startDate = twoWeeksAgo.toISOString().split('T')[0];
         endDate = today.toISOString().split('T')[0];
-        document.body.style.backgroundColor = '#FFDEB5'; // replace with your color
 
         await fetchData();
     });
@@ -189,6 +188,12 @@
 </main>
 
 <style>
+:global(body) {
+    margin: 0; /* Remove default margin */
+    padding: 0; /* Remove default padding */
+    background-color: #FFDEB5; /* Light peach background */
+    min-height: 10vh; /* Full viewport height */
+}  
     :root {
     --primary-color: #8abce5; /* Sporty blue */
     --accent-color: #F44336; /* Energetic red */
@@ -204,6 +209,13 @@
         text-align: center;
         padding: 1em;
         margin: auto;
+        display: flex; /* Use flexbox to enable flexible box layouts */
+        flex-direction: column; /* Stack children vertically */
+        justify-content: flex-start; /* Align children to the start of the main axis */
+        align-items: center; /* Center children along the cross axis */
+        min-height: calc(100vh - 60px); /* Full height minus footer height */
+        padding-bottom: 60px; /* Space for the footer */
+
     }
 
     .cards {
@@ -259,8 +271,9 @@ background-image: linear-gradient(131deg, #FAD961 24%, #F76B1C 100%);
         position: fixed;
         bottom: 0;
         width: 100%;
+        max-height: 60px;
         color: white;
-        padding: 1em;
+        padding: 0.5em;
         background-color: #FAD961;
         background-image: linear-gradient(323deg, #FAD961 0%, #F76B1C 0%);
 
@@ -274,6 +287,34 @@ background-image: linear-gradient(131deg, #FAD961 24%, #F76B1C 100%);
             align-items: center;
         }
     }
+    @media (max-width: 400px) { /* Adjust this value based on when you want the change to occur */
+        .card {
+            max-width: 90vw; /* Consistent card size on smaller screens */
+        }
+    }
+        @media (max-height: 668px) {
+            :global(body) {
+                min-height: 290vh; /* Remove space for the footer */
+            }
+        }
+
+        @media (min-height: 669px) and (max-height: 896px) {
+            :global(body) {
+                min-height: 190vh; /* Adjust for larger screens like iPhone XR, iPhone 11, iPhone 11 Pro */
+            }
+        }
+
+        @media (min-height: 897px) and (max-height: 926px) {
+            :global(body) {
+                min-height: 180; /* Adjust for larger screens like iPhone 12 Pro Max */
+            }
+        }
+
+        @media (min-height: 927px) and (max-height: 1024px) {
+            :global(body) {
+                min-height: 140vh; /* Adjust for larger screens like iPads */
+            }
+        }
 </style>
 <!-- add a sticky footer here -->
 <footer class="footer">
