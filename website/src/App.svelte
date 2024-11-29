@@ -82,15 +82,28 @@
         averageDurationPerVisit = totalDuration / totalVisits || 0;
 
     }
-    let quotes = ["Push yourself because no one else is going to do it for you.",
-        "The only bad workout is the one that didn't happen.",
-        "To enjoy the glow of good health, you must exercise.",
-        "Strength doesn't come from what you can do. It comes from overcoming the things you once thought you couldn't.",
-        "Sweat is just fat crying—keep it weeping!",
-        "Fall in love with taking care of your body. It's the only place you have to live.",
-        "Exercise not only changes your body; it changes your mind, your attitude, and your mood.",
-        "Your workout is a celebration of what your body can do, not a punishment for what you ate."
-    ];
+    let quotes = [
+    "Push yourself because no one else is going to do it for you.",
+    "The only bad workout is the one that didn't happen.",
+    "To enjoy the glow of good health, you must exercise.",
+    "Strength doesn't come from what you can do. It comes from overcoming the things you once thought you couldn't.",
+    "Sweat is just fat crying—keep it weeping!",
+    "Fall in love with taking care of your body. It's the only place you have to live.",
+    "Exercise not only changes your body; it changes your mind, your attitude, and your mood.",
+    "Your workout is a celebration of what your body can do, not a punishment for what you ate.",
+    "Don't count the days, make the days count.",
+    "What seems impossible today will one day become your warm-up.",
+    "Success starts with self-discipline.",
+    "The body achieves what the mind believes.",
+    "Train insane or remain the same.",
+    "Fitness is not about being better than someone else. It's about being better than you used to be.",
+    "You don’t have to be extreme, just consistent.",
+    "Take care of your body. It's the only place you have to live.",
+    "No matter how slow you go, you're still lapping everyone on the couch.",
+    "Believe in yourself and all that you are. Know that there is something inside you that is greater than any obstacle.",
+    "Your only limit is you. Push past it.",
+    "Sweat now, shine later."
+];
     let quote = quotes[Math.floor(Math.random() * quotes.length)];
 </script>
 
