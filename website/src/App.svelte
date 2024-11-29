@@ -242,9 +242,6 @@ background-image: linear-gradient(131deg, #FAD961 24%, #F76B1C 100%);
         transform: rotate(0deg); /* Slight angle to create dynamic tension */
         transition: transform 0.1s ease;
     }
-    .card:hover {
-    transform: rotate(-5deg); /* Straightens on hover for interaction */
-}
     .card-header {
         background-color: #FAD961;
         background-image: linear-gradient(323deg, #FAD961 0%, #F76B1C 0%);

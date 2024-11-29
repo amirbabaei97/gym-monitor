@@ -18,15 +18,6 @@ app.add_middleware(
     allow_headers=["*"],  # Allows all headers
 )
 
-
-@app.get("/api/scrape")
-async def scrape_endpoint():
-    loop = asyncio.get_running_loop()
-    # Offload the synchronous scrape function to the executor
-    await loop.run_in_executor(executor, scrape)
-    return {"message": "Scraping process completed."}
-
-
 @app.get("/api/checkins/")
 async def get_checkins(start_date: datetime = None, end_date: datetime = None):
     checkins = []

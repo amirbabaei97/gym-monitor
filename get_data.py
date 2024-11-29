@@ -91,6 +91,9 @@ def main():
 
     # Combine existing and new data
     all_checkins = existing_checkins + updated_checkins
+    
+    # Sort combined data by Start Time descending
+    all_checkins.sort(key=lambda x: x["Start Time"], reverse=True)
 
     # Write to CSV
     write_checkins_to_csv(all_checkins)
