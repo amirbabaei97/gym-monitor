@@ -4,6 +4,9 @@
 #environment variables
 .env
 
+# mac os files
+.DS_Store
+
 #local files
 checkins.csv
 

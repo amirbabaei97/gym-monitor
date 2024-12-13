@@ -4,7 +4,6 @@ import asyncio
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
 from fastapi.middleware.cors import CORSMiddleware
-from scraper import scrape
 
 app = FastAPI()
 executor = ThreadPoolExecutor(max_workers=1)
@@ -12,20 +11,11 @@ executor = ThreadPoolExecutor(max_workers=1)
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:8080"],  # Specifies the origins that are allowed to make requests to your FastAPI app
+    allow_origins=["http://localhost:8080"],  # Specifies the origins that are allowed to make requests
     allow_credentials=True,
     allow_methods=["*"],  # Allows all methods
     allow_headers=["*"],  # Allows all headers
 )
-
-
-@app.get("/api/scrape")
-async def scrape_endpoint():
-    loop = asyncio.get_running_loop()
-    # Offload the synchronous scrape function to the executor
-    await loop.run_in_executor(executor, scrape)
-    return {"message": "Scraping process completed."}
-
 
 @app.get("/api/checkins/")
 async def get_checkins(start_date: datetime = None, end_date: datetime = None):
