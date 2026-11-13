@@ -1,68 +1,70 @@
+# Gym Wall of Shame 💪
 
-# Project Title: Gym Wall of Shame
+I kept skipping leg day, so every check-in at my gym is now public: days since the last visit, weekly goal and streaks, a year-long gym calendar, when I go and how long I stay.
 
-Welcome to the **Gym Wall of Shame** project, where we combine the magic of FastAPI and the charm of Svelte to create a web application that's not just functional but also judgemental. Our project features a FastAPI backend that scrapes my gym's attendance data because let's face it, everyone needs to know when I hit the weights!
+Live at **https://gym.amir.rocks**.
 
-![Screenshot of the wall of shame](https://i.ibb.co/3WqrxJY/Screenshot-2024-05-10-at-18-05-09.png)
+## How it works
 
-## FastAPI Python Application
-
-Nestled in the root directory, you'll find FastAPI:
-- **app.py**: The beating heart of our operation, directing traffic like a pro.
-- **scraper.py**: This little spy is tailored to work exclusively with my gym. It’s on a mission to fetch all my check-ins, so I can’t pretend I was at the gym when I was actually munching on pizza.
-
-### Getting Started
-Unleash the power of our FastAPI application by following these steps: (Remember, you need to modify the scrapper for your own gym!)
-
-1. Create a virtual environment:
-   ```bash
-   python3 -m venv env
-   source env/bin/activate
-   ```
-2. Install the packages from `requirements.txt`:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-#### Running the Operations
-- To launch the main app:
-  ```bash
-  uvicorn app:app --reload
-  ```
-
-## Svelte Web Application
-
-This shiny knight resides in the `website` directory, ready to publicly shame me!
-
-### Getting Started
-Follow these steps:
-
-1. Navigate to `website` directory:
-   ```bash
-   cd website
-   ```
-2. Install the nessecary dependencies:
-   ```bash
-   npm install
-   ```
-
-#### Development Sorcery
-- Start the development server at `localhost:8080`:
-  ```bash
-  npm run dev
-  ```
-
-### Building and Running in Production Mode
-To forge an optimized version of your app:
-```bash
-npm run build
-npm run start
+```
+Fitness First app backend ──(5 syncs a day)──▶ FastAPI + SQLite ──▶ Svelte 5 dashboard
 ```
 
+- **backend/**: FastAPI (Python 3.14, uv). It syncs check-ins on a jittered schedule into SQLite and serves `/api/dashboard` plus the built frontend. CLI: `gym`.
+- **frontend/**: Svelte 5 + Vite 8 with hand-rolled SVG charts and self-hosted fonts. All stats are computed in the browser.
+- **One container**: the multi-stage `Dockerfile` builds the frontend with Node and runs it with Python. No published port in production; Traefik routes to it.
+
+## Connecting Fitness First
+
+The Fitness First app runs on Netpulse (EGYM). There is no public API; the service talks to the same endpoints as the iOS app (found with Proxyman):
+
+```
+POST https://fitnessfirst.netpulse.com/np/exerciser/login            username=…&password=…  -> uuid + JSESSIONID (3 h)
+GET  https://fitnessfirst.netpulse.com/np/exercisers/<uuid>/check-ins/history?startDate=…&endDate=…
+```
+
+The history returns check-in times and the studio only. There are no check-outs, so the dashboard shows durations only for older data that has them.
+
+Setup:
+
+1. Put `FF_USERNAME` (your Fitness First e-mail) and `FF_PASSWORD` into `.env`, then recreate the container (`docker compose up -d --force-recreate`).
+2. Check the login (optional):
+   ```bash
+   docker compose exec web gym login
+   ```
+3. That's it. The first sync walks back month by month through your whole history. After that it fetches the current and last month five times a day, logging in again whenever the 3-hour session has run out. If Fitness First rejects the password, it stops trying (so the account doesn't get locked) until the container is recreated.
+
+`gym status` shows the state. Fallbacks, in case the app changes: `gym import-curl < curl.txt` (a captured check-ins request) and `gym import-login < login.txt` (a captured login with the password replaced by `{{PASSWORD}}`). Old v1 data: `gym import-csv < checkins.csv`.
+
+## Running it
+
+```bash
+cp .env.example .env                                       # optional settings
+docker compose -f docker-compose.local.yml up --build      # http://localhost:8000
+```
+
+Production (`docker-compose.yml`) expects an external `traefik-public` network and a Traefik instance in front of it.
+
+Development:
+
+```bash
+cd backend && uv sync && DATA_DIR=./data uv run gym seed-demo && DATA_DIR=./data SYNC_ENABLED=false uv run uvicorn app.main:app --reload
+cd frontend && npm install && npm run dev                  # proxies /api to :8000
+cd backend && uv run pytest
+```
+
+### Settings (`.env`)
+
+| Variable | Default | |
+|---|---|---|
+| `DOMAIN` | `gym.amir.rocks` | Host rule for Traefik |
+| `WEEKLY_GOAL` | `3` | Visits per week |
+| `SHOW_LIVE` | `false` | Show "in the gym right now" while checked in |
+| `SHOW_STUDIOS` | `false` | Show studio names |
+| `SYNC_PER_DAY` | `5` | Syncs per day, spread evenly from `SYNC_FIRST_HOUR` (`8`) to `SYNC_LAST_HOUR` (`22`), each ±`SYNC_JITTER_MINUTES` (`20`) |
+| `DATA_START` | empty | Hide check-ins before this date (`YYYY-MM-DD`), e.g. stray ones from before the app counted reliably |
+| `TZ` | `Europe/Berlin` | |
+
 ## License
-This project is shielded by the GNU General Public License. Check the `LICENSE` file.
 
-## Contact
-[Just drop an email to pr.babayee@icloud.com](mailto:pr.babayee@icloud.com)
-
-Get ready to be inspired, replicate this setup for your gym, and start tracking your own fitness journey in style!
+GPL-2.0. See `LICENSE`.

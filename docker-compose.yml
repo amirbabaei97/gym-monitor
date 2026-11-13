@@ -1,0 +1,45 @@
+# Production: https://gym.amir.rocks on the Personal Server.
+#
+#   Cloudflare -> host Nginx :443 (TLS) -> Traefik 127.0.0.1:8091
+#   -> gym-monitor :8000 (network traefik-public)
+#
+# No host port is published. Traefik and the traefik-public network live in
+# ~/edge on the server. For a local run without Traefik, see README.
+name: gym-monitor
+
+services:
+  web:
+    build: .
+    image: gym-monitor
+    container_name: gym-monitor
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
+    read_only: true
+    tmpfs:
+      - /tmp
+    volumes:
+      # SQLite database + the captured Fitness First request (credentials.json, mode 600)
+      - data:/data
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    mem_limit: 192m
+    pids_limit: 128
+    networks:
+      - traefik-public
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik-public
+      - traefik.http.routers.gym-monitor.rule=Host(`${DOMAIN:-gym.amir.rocks}`)
+      - traefik.http.routers.gym-monitor.entrypoints=web
+      - traefik.http.services.gym-monitor.loadbalancer.server.port=8000
+
+networks:
+  traefik-public:
+    external: true
+
+volumes:
+  data:

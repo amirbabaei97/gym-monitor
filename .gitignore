@@ -1,14 +1,30 @@
-#virtual environment
-/gym
-
-#environment variables
+# environment / secrets
 .env
+credentials.json
+curl.txt
 
-# mac os files
+# data
+*.csv
+*.db
+*.db-*
+data/
+
+# python
+__pycache__/
+.venv/
+.pytest_cache/
+
+# node
+node_modules/
+frontend/dist/
+
+# macOS
 .DS_Store
 
-#local files
-checkins.csv
-
-#python cache
-__pycache__/
+# captures from the phone (cookies, tokens): never commit
+.env.*
+!.env.example
+*.har
+login.txt
+netpulse.json
+*.bak

@@ -1,0 +1,17 @@
+# Local run without Traefik:  docker compose -f docker-compose.local.yml up --build
+# then open http://localhost:8000
+name: gym-monitor-local
+
+services:
+  web:
+    build: .
+    env_file:
+      - path: .env
+        required: false
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - data:/data
+
+volumes:
+  data:
