@@ -1,5 +1,5 @@
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
 import httpx
@@ -30,16 +30,41 @@ PAYLOAD = {"checkIns": [
 
 
 def test_parse_netpulse_history():
+    # Netpulse's naive checkInDate is UTC despite "timezone": "Europe/Berlin".
     a, b = parse_visits(PAYLOAD, BERLIN)
-    assert a.checkin == datetime(2026, 10, 31, 17, 5, 10, tzinfo=BERLIN)
-    assert a.checkin.utcoffset() == timedelta(hours=1)  # CET
-    assert b.checkin.utcoffset() == timedelta(hours=2)  # CEST
+    assert a.checkin == datetime(2026, 10, 31, 18, 5, 10, tzinfo=BERLIN)  # 17:05 UTC, CET (+1)
+    assert a.checkin.utcoffset() == timedelta(hours=1)
+    assert b.checkin == datetime(2026, 7, 30, 20, 37, 17, tzinfo=BERLIN)  # 18:37 UTC, CEST (+2)
+    assert b.checkin.utcoffset() == timedelta(hours=2)
     assert a.checkout is None and a.studio == "Frankfurt - Opernplatz"
 
 
-def test_parse_entry_timezone_wins():
+def test_parse_naive_is_utc_whatever_the_timezone_field():
     [v] = parse_visits({"checkIns": [{"checkInDate": "2026-10-31T17:00:00", "timezone": "Europe/London"}]}, BERLIN)
-    assert v.checkin.astimezone(BERLIN).hour == 18
+    assert v.checkin.astimezone(timezone.utc).hour == 17
+
+
+def test_fix_app_times_once(tmp_path):
+    import sqlite3
+
+    from app import db
+
+    path = tmp_path / "gym.db"
+    # An old database: naive UTC values stored with the Berlin offset, user_version 0.
+    old = sqlite3.connect(path)
+    old.executescript(db.SCHEMA)
+    old.executemany("INSERT INTO sessions VALUES (?, NULL, NULL, ?, 'x')", [
+        ("2026-11-18T18:39:32+01:00", "app"), ("2026-07-30T18:37:17+02:00", "app"),
+        ("2024-05-10T18:00:00+02:00", "csv"),
+    ])
+    old.commit(); old.close()
+    with db.connect(path) as conn:
+        assert db.fix_app_times(conn, BERLIN) == 2
+        assert db.fix_app_times(conn, BERLIN) == 0
+        got = [r[0] for r in conn.execute("SELECT checkin FROM sessions ORDER BY checkin")]
+    assert got == ["2024-05-10T18:00:00+02:00", "2026-07-30T20:37:17+02:00", "2026-11-18T19:39:32+01:00"]
+    with db.connect(tmp_path / "new.db") as conn:  # a new database needs no fix
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == 1
 
 
 def test_parse_legacy_shapes():

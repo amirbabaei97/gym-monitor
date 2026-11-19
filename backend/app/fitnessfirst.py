@@ -244,13 +244,17 @@ def _entries(payload) -> list[dict]:
 
 
 def parse_visits(payload, zone: ZoneInfo) -> list[Visit]:
+    """Visits in `zone`.
+
+    Netpulse sends `checkInDate` without an offset, and it is **UTC**, even
+    though every entry also says `"timezone": "Europe/Berlin"`. (Checked
+    2026-11-19: a habit of ~19:30 Berlin time shows up as ~18:30 in winter and
+    ~17:30 in summer, jumping by exactly an hour at each DST switch.) So naive
+    times are read as UTC; values with an explicit offset keep it.
+    """
     visits = []
+    ez = timezone.utc
     for e in _entries(payload):
-        tz = _pick(e, "timezone", "timeZone")
-        try:
-            ez = ZoneInfo(tz) if isinstance(tz, str) and tz else zone
-        except (KeyError, ValueError):
-            ez = zone
         checkin = parse_time(_pick(e, "checkInDate", "checkinTime", "checkInTime", "checkin", "startTime", "start"), ez)
         if checkin is None:
             continue

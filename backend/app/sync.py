@@ -21,6 +21,12 @@ def now_iso() -> str:
     return datetime.now().astimezone().isoformat(timespec="seconds")
 
 
+def migrate(settings: Settings) -> None:
+    with db.connect(settings.db_path) as conn:
+        if n := db.fix_app_times(conn, settings.zone):
+            log.info("fixed %d stored check-ins: Netpulse times are UTC, not local", n)
+
+
 def _client(settings: Settings, cfg: NetpulseConfig) -> Netpulse:
     return Netpulse(cfg, settings.zone, settings.ff_username, settings.ff_password,
                     on_change=lambda c: c.save(settings.credentials_path))
@@ -29,6 +35,7 @@ def _client(settings: Settings, cfg: NetpulseConfig) -> Netpulse:
 async def sync_once(settings: Settings, force_backfill: bool = False) -> dict:
     """Fetch, store, and record the outcome in the meta table. Never raises."""
     global _login_rejected
+    migrate(settings)
     cfg = NetpulseConfig.load(settings.credentials_path)
     if cfg is None and settings.ff_username and settings.ff_password:
         cfg = NetpulseConfig.bootstrap()

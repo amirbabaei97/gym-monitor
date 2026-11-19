@@ -12,7 +12,7 @@ from fastapi.staticfiles import StaticFiles
 
 from . import db
 from .config import get_settings
-from .sync import sync_loop
+from .sync import migrate, sync_loop
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 logging.getLogger("httpx").setLevel(logging.WARNING)  # one line per Fitness First request is noise
@@ -32,8 +32,7 @@ CSP = (
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     settings = get_settings()
-    with db.connect(settings.db_path):
-        pass  # create schema
+    migrate(settings)  # creates the schema; one-time fixes for older databases
     task = asyncio.create_task(sync_loop(settings)) if settings.sync_enabled else None
     yield
     if task:

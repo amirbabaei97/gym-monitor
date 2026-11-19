@@ -4,7 +4,7 @@ import json
 import sqlite3
 from contextlib import contextmanager
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 SCHEMA = """
@@ -29,6 +29,10 @@ class Visit:
     studio: str | None
 
 
+# user_version 1: app check-ins are stored with correct times (see fix_app_times).
+SCHEMA_VERSION = 1
+
+
 @contextmanager
 def connect(path: Path):
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -36,7 +40,10 @@ def connect(path: Path):
     conn.row_factory = sqlite3.Row
     try:
         conn.execute("PRAGMA journal_mode=WAL")
+        fresh = conn.execute("SELECT 1 FROM sqlite_master WHERE name = 'sessions'").fetchone() is None
         conn.executescript(SCHEMA)
+        if fresh:
+            conn.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
         yield conn
         conn.commit()
     finally:
@@ -70,6 +77,32 @@ def upsert_visits(conn: sqlite3.Connection, visits: list[Visit], source: str) ->
         ],
     )
     return conn.total_changes - before
+
+
+def fix_app_times(conn: sqlite3.Connection, zone) -> int:
+    """One-time fix for databases written before user_version 1.
+
+    Back then Netpulse's naive check-in times were taken as local time, but they
+    are UTC. Each 'app' row's wall-clock time is re-read as UTC and stored in
+    `zone`. Returns the number of rows fixed (0 once done).
+    """
+    if conn.execute("PRAGMA user_version").fetchone()[0] >= 1:
+        return 0
+
+    def fix(value: str | None) -> str | None:
+        if not value:
+            return value
+        naive = datetime.fromisoformat(value).replace(tzinfo=None)
+        return naive.replace(tzinfo=timezone.utc).astimezone(zone).isoformat(timespec="seconds")
+
+    rows = conn.execute("SELECT * FROM sessions WHERE source = 'app'").fetchall()
+    conn.execute("DELETE FROM sessions WHERE source = 'app'")
+    conn.executemany(
+        "INSERT OR IGNORE INTO sessions (checkin, checkout, studio, source, updated) VALUES (?, ?, ?, ?, ?)",
+        [(fix(r["checkin"]), fix(r["checkout"]), r["studio"], r["source"], r["updated"]) for r in rows],
+    )
+    conn.execute("PRAGMA user_version = 1")
+    return len(rows)
 
 
 def all_visits(conn: sqlite3.Connection) -> list[Visit]:
